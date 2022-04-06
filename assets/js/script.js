@@ -1,4 +1,4 @@
-var tasks = {};  //is a object
+var tasks = {}; //is a object
 
 var createTask = function (taskText, taskDate, taskList) {
   // create elements that make up a task item
@@ -47,9 +47,7 @@ $(".list-group").on("click", "p", function () {
   // this var referes to doing stuff with in the p tag area
   //group list call back function with this reffering to current value
 
-  var text = $(this)
-   .text()
-   .trim();
+  var text = $(this).text().trim();
 
   var textInput = $("<textarea>")
     .addClass("form-control") // adding a class to the dynamic textarea creation with the class="form-control"
@@ -62,42 +60,35 @@ $(".list-group").on("click", "p", function () {
 $(".list-group").on("blur", "textarea", function () {
   // listens for the removal of the cursor from textarea than does the function
   // get the textarea's current value/text
-  var text = $(this)
-  .val()
-  .trim();
+  var text = $(this).val().trim();
 
   // get the parent ul's id attribute
   var status = $(this).closest(".list-group").attr("id").replace("list-", "");
   console.log(status); /////////////////////////////////////////////////////////////////
   // get the task's position in the list of other li elements
-  var index = $(this)
-  .closest(".list-group-item")
-  .index(); //the object at the given index in the array
+  var index = $(this).closest(".list-group-item").index(); //the object at the given index in the array
 
   tasks[status][index].text = text; //update the overarching tasks object with the new data.
-                                    //Because we don't know the values, we'll have to use the variable names as placeholders
-  saveTasks();                      
-   // tasks is an object.
-   // tasks[status] returns an array (e.g., toDo).
-   // tasks[status][index] returns the object at the given index in the array.
-   // tasks[status][index].text returns the text property of the object at the given index.
+  //Because we don't know the values, we'll have to use the variable names as placeholders
+  saveTasks();
+  // tasks is an object.
+  // tasks[status] returns an array (e.g., toDo).
+  // tasks[status][index] returns the object at the given index in the array.
+  // tasks[status][index].text returns the text property of the object at the given index.
 
   // recreate p element
   var taskP = $("<p>") //create a var = queryselector <p>
-  .addClass("m-1")     //add the class back to it
-  .text(text);                  
+    .addClass("m-1") //add the class back to it
+    .text(text);
 
   // replace textarea with p element
   $(this).replaceWith(taskP); // replace what ever this is with taskP
-
 });
 
-// due date was clicked 
-$(".list-group").on("click", "span", function() {
+// due date was clicked
+$(".list-group").on("click", "span", function () {
   // get current text
-  var date = $(this)
-    .text()
-    .trim();
+  var date = $(this).text().trim();
 
   // create new input element
   var dateInput = $("<input>")
@@ -113,25 +104,19 @@ $(".list-group").on("click", "span", function() {
 });
 
 // value of due date was changed
-$(".list-group").on("blur", "input[type='text']", function() {
+$(".list-group").on("blur", "input[type='text']", function () {
   // get current text
-  var date = $(this)
-    .val()
-    .trim();
+  var date = $(this).val().trim();
 
   // get the parent ul's id attribute
-  var status = $(this)
-    .closest(".list-group")
-    .attr("id")
-    .replace("list-", "");
+  var status = $(this).closest(".list-group").attr("id").replace("list-", "");
 
   // get the task's position in the list of other li elements
-  var index = $(this)
-    .closest(".list-group-item")
-    .index();
+  var index = $(this).closest(".list-group-item").index();
 
   // update task in array and re-save to localstorage
   tasks[status][index].date = date;
+
   saveTasks();
 
   // recreate span element with bootstrap classes
@@ -143,7 +128,78 @@ $(".list-group").on("blur", "input[type='text']", function() {
   $(this).replaceWith(taskSpan);
 });
 
+$(".card .list-group").sortable({
+  //Tasks can now be dragged within the same column and across other columns.
+  connectWith: $(".card .list-group"), //sortable() turned the .class into sortable// connectWith() linked them.
+  scroll: false,
+  tolerance: "pointer",
+  helper: "clone",
+  activate: function (event) {
+    //console.log("activate", this);
+  },
+  deactivate: function (event) {
+    //console.log("deactivate", this);
+  },
+  over: function (event) {
+    //console.log("over", event.target);
+  },
+  out: function (event) {
+    // console.log("out", event.target);
+  },
 
+  update: function (event) {
+    // array to store the task data in
+    var tempArr = [];
+    // loop over current set of children in sortable list
+    $(this)
+      .children()
+      .each(function () {
+        // resaves the tasks into loacl storage and can happen to 2 lists at one if the tasks are dragged from one coloum to another
+        var text = $(this).find("p").text().trim();
+
+        var date = $(this).find("span").text().trim();
+
+        // add task data to the temp array as an object
+        tempArr.push(
+          {
+            text: text,
+            date: date,
+          }
+        );
+      });
+      console.log(tempArr);
+
+      // trim down list's ID to match object property
+      var arrName = $(this)
+        .attr("id")
+        .replace("list-", "");
+
+       // update array on tasks object and save 
+      tasks[arrName] = tempArr;
+
+      saveTasks();
+  },
+});
+
+$("#trash").droppable({
+  accept: ".card .list-group-item",
+  tolerance: "touch",
+  drop: function(event, ui) {
+    console.log("drop");
+    ui.draggable.remove();   // draggable is "a jQuery object representing the draggable element."
+  },
+  over: function(event, ui) {
+    console.log("over");
+  },
+  out: function(event, ui) {
+    console.log("out");
+  }
+
+ 
+});
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
 // modal was triggered
 $("#task-form-modal").on("show.bs.modal", function () {
   // clear values
@@ -178,6 +234,8 @@ $("#task-form-modal .btn-primary").click(function () {
     saveTasks(); //The saveTasks() function simply saves the tasks object in localStorage
   }
 });
+
+//////////////////////////////////////////////////////////////////////////////////////////
 
 // remove all tasks
 $("#remove-tasks").on("click", function () {
